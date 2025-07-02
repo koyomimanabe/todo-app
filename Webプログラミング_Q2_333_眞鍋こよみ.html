@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TODOリスト</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+    body {
+      background: #d6d6d6;
+      font-family: 'DotGothic16', 'Noto Sans JP', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .main-container {
+      padding: 24px 2vw;
+      min-height: 100vh;
+    }
+    .todo-header {
+      display: flex;
+      align-items: center;
+      font-size: 30px;
+      font-weight: bold;
+      margin-bottom: 32px;
+      margin-top: 32px;
+      margin-left: 25px;
+      letter-spacing: 2px;
+    }
+    .todo-header .add-group-btn {
+      margin-left: 16px;
+      background: #111;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      width: 36px;
+      height: 36px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .todo-header .add-group-btn:hover {
+      background: #444;
+    }
+    .todo-groups {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-left: 16px;
+      margin-right: 16px;
+    }
+    .todo-card {
+      background: #e5e5e5;
+      border: 2px solid #888;
+      border-radius: 32px;
+      padding: 32px 24px 24px 24px;
+      min-width: 320px;
+      max-width: 350px;
+      flex: 1 1 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      box-sizing: border-box;
+      margin-left: 8px;
+      margin-right: 8px;
+    }
+    .todo-title {
+      font-size: 2.2rem;
+      font-weight: bold;
+      margin-bottom: 0.5em;
+      text-align: center;
+      letter-spacing: 2px;
+    }
+    .todo-deadline {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 1.5em;
+      text-align: center;
+    }
+    .subtasks {
+      width: 90%;
+      margin-bottom: 1.5em;
+    }
+    .subtask-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.7em;
+      gap: 8px;
+    }
+    .subtask-num {
+      background: #111;
+      color: #fff;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-right: 8px;
+    }
+    .subtask-label {
+      flex: 1;
+      font-size: 1.1rem;
+      color: #222;
+    }
+    .subtask-checkbox {
+      width: 20px;
+      height: 20px;
+      accent-color: #111;
+    }
+    .add-subtask-form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1.5em;
+      width: 100%;
+    }
+    .add-subtask-input {
+      flex: 1;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+      font-size: 1rem;
+      height: 20px;
+      min-height: unset;
+      max-height: unset;
+      resize: none;
+    }
+    .add-subtask-btn {
+      background: #111;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      width: 32px;
+      height: 32px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      margin-bottom: 32px;
+    }
+    .add-subtask-btn:hover {
+      background: #444;
+    }
+    .complete-btn {
+      width: 80%;
+      background: #111;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.3rem;
+      font-weight: bold;
+      padding: 12px 0;
+      margin-top: auto;
+      cursor: pointer;
+      transition: background 0.2s;
+      letter-spacing: 2px;
+    }
+    .complete-btn:hover {
+      background: #444;
+    }
+    /* モーダル */
+    .modal-bg {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal {
+      background: #fff;
+      border-radius: 18px;
+      padding: 32px 24px 24px 24px;
+      min-width: 320px;
+      max-width: 90vw;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      align-items: stretch;
+    }
+    .modal label {
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .modal input {
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+      font-size: 1rem;
+      margin-bottom: 8px;
+      height: 48px;
+      box-sizing: border-box;
+    }
+    .modal select {
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+      font-size: 1rem;
+      margin-bottom: 8px;
+      height: 48px;
+      box-sizing: border-box;
+      background: #fff;
+    }
+    .modal select:focus {
+      outline: none;
+      border-color: #4ecdc4;
+    }
+    .modal-btns {
+      display: flex;
+      gap: 16px;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+    .modal-btn {
+      background: #111;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      padding: 8px 24px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .modal-btn:hover {
+      background: #444;
+    }
+    @media (max-width: 1200px) {
+      .todo-groups {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+    }
+    @media (max-width: 900px) {
+      .todo-groups {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-left: 4vw;
+        margin-right: 4vw;
+      }
+      .todo-card {
+        min-width: 90vw;
+        max-width: 98vw;
+        margin-left: 0;
+        margin-right: 0;
+      }
+    }
+    @media (max-width: 600px) {
+      .main-container {
+        padding: 8px 0.5vw;
+      }
+      .todo-card {
+        padding: 18px 6px 16px 6px;
+        border-radius: 18px;
+        margin-left: 0;
+        margin-right: 0;
+      }
+      .todo-title {
+        font-size: 1.3rem;
+      }
+      .todo-deadline {
+        font-size: 1rem;
+      }
+      .complete-btn {
+        font-size: 1rem;
+        padding: 8px 0;
+      }
+      .modal {
+        min-width: 90vw;
+        padding: 18px 6px 16px 6px;
+      }
+      .header-buttons {
+        flex-direction: row;
+        align-items: stretch;
+        width: 100%;
+        margin-bottom: 24px;
+        margin-left: 16px;
+        margin-right: 16px;
+      }
+    }
+    /* おめでとうアニメーション */
+    .congrats {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      color: #111;
+      font-size: 2.2rem;
+      font-weight: bold;
+      border-radius: 24px;
+      padding: 32px 48px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      z-index: 2000;
+      animation: popUp 1s ease;
+      text-align: center;
+    }
+    @keyframes popUp {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+    }
+    body.dark {
+      background: #232323;
+      color: #f2f2f2;
+    }
+    body.dark .main-container {
+      background: #232323;
+    }
+    body.dark .todo-header {
+      color: #fff;
+    }
+    body.dark .todo-card {
+      background: #2d2d2d;
+      border: 2px solid #555;
+    }
+    body.dark .add-group-btn,
+    body.dark .add-subtask-btn,
+    body.dark .complete-btn,
+    body.dark .modal-btn {
+      background: #fff;
+      color: #232323;
+    }
+    body.dark .add-group-btn:hover,
+    body.dark .add-subtask-btn:hover,
+    body.dark .complete-btn:hover,
+    body.dark .modal-btn:hover {
+      background: #bbb;
+    }
+    body.dark .subtask-num {
+      background: #fff;
+      color: #232323;
+    }
+    body.dark .modal {
+      background: #232323;
+      color: #fff;
+    }
+    body.dark .congrats {
+      background: #fff;
+      color: #232323;
+    }
+    body.dark input,
+    body.dark .add-subtask-input {
+      background: #444;
+      color: #fff;
+      border: 1px solid #888;
+    }
+    body.dark .subtask-checkbox {
+      accent-color: #fff;
+    }
+    body.dark .subtask-label {
+      color: #fff;
+    }
+    body.dark .modal input,
+    body.dark .add-subtask-input {
+      background: #444;
+      color: #fff;
+      border: 1px solid #888;
+    }
+    body.dark .modal select {
+      background: #444;
+      color: #fff;
+      border: 1px solid #888;
+    }
+    .todo-subject,
+    .todo-weight,
+    .todo-notes {
+      font-size: 1rem;
+      margin-bottom: 6px;
+      text-align: center;
+      color: #333;
+    }
+    body.dark .todo-subject,
+    body.dark .todo-weight,
+    body.dark .todo-notes {
+      color: #eee;
+    }
+    /* 完了済一覧カード */
+    .completed-card {
+      border: 1px solid #aaa;
+      border-radius: 12px;
+      padding: 12px 10px;
+      margin-bottom: 12px;
+      background: #f5f5f5;
+      color: #222;
+    }
+    body.dark .completed-card {
+      background: #333;
+      color: #fff;
+      border: 1px solid #666;
+    }
+    .header-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: nowrap;
+      margin-bottom: 24px;
+      justify-content: center;
+      margin-left: 25px;
+      margin-right: 25px;
+    }
+    .header-btn, .add-group-btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      background: #222;
+      color: #fff;
+      font-size: 1.1rem;
+      cursor: pointer;
+      margin: 0;
+      min-width: 0;
+      min-height: 40px;
+      flex: 1 1 0;
+      flex-shrink: 1;
+      white-space: nowrap;
+      font-family: inherit;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+    .header-btn:hover, .add-group-btn:hover {
+      background: #444;
+    }
+    body.dark .header-btn {
+      background: #fff;
+      color: #232323;
+    }
+
+    body.dark .header-btn:hover {
+      background: #bbb;
+    }
+    @media (max-width: 600px) {
+      .header-buttons {
+        flex-direction: row;
+        align-items: stretch;
+        width: auto;
+        margin-bottom: 24px;
+        margin-left: 16px;
+        margin-right: 16px;
+      }
+      .header-btn, .add-group-btn {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <div class="todo-header">
+      TODOリスト
+    </div>
+    <div class="header-buttons">
+      <button class="add-group-btn" onclick="openGroupModal()">＋</button>
+      <button id="showCompletedBtn" class="header-btn">完了済一覧</button>
+      <button id="darkModeToggle" class="header-btn">ダークモード</button>
+    </div>
+    <div class="todo-groups" id="todoGroups">
+      <!-- カードがここに追加される -->
+    </div>
+  </div>
+  <!-- グループ追加モーダル -->
+  <div id="groupModalBg" class="modal-bg" style="display:none;">
+    <div class="modal">
+      <label for="groupTitle">グループ名</label>
+      <input id="groupTitle" type="text" placeholder="例: アントレ"autocomplete="off">
+      <label for="groupSubject">科目名</label>
+      <input id="groupSubject" type="text" placeholder="例: 数学"autocomplete="off">
+      <label for="groupWeight">比重（重要度）</label>
+      <select id="groupWeight">
+        <option value="1">1（低い）</option>
+        <option value="2">2</option>
+        <option value="3" selected>3（普通）</option>
+        <option value="4">4</option>
+        <option value="5">5（高い）</option>
+      </select>
+      <label for="groupNotes">メモ</label>
+      <input id="groupNotes" type="text" placeholder="自由記入">
+      <label for="groupDeadline">締切日時</label>
+      <input id="groupDeadline" type="datetime-local">
+      <div class="modal-btns">
+        <button class="modal-btn" onclick="closeGroupModal()">キャンセル</button>
+        <button class="modal-btn" onclick="addGroup()">追加</button>
+      </div>
+    </div>
+  </div>
+  <!-- 完了済一覧モーダル -->
+  <div id="completedModalBg" class="modal-bg" style="display:none;z-index:4000;">
+    <div class="modal" style="max-width:600px;overflow-y:auto;max-height:80vh;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-size:1.3rem;font-weight:bold;">完了済一覧</div>
+        <button class="modal-btn" onclick="closeCompletedModal()">閉じる</button>
+      </div>
+      <div id="completedList"></div>
+    </div>
+  </div>
+  <script>
+    // localStorageキー
+    const STORAGE_KEY = 'todoGroups';
+    const COMPLETED_KEY = 'todoCompletedGroups';
+    // 初期データは空
+    let groups = [];
+    let addSubtaskIdx = null;
+
+    // 保存
+    function saveGroups() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(groups));
+    }
+    function saveCompletedGroups(completedGroups) {
+      localStorage.setItem(COMPLETED_KEY, JSON.stringify(completedGroups));
+    }
+    // 復元
+    function loadGroups() {
+      const data = localStorage.getItem(STORAGE_KEY);
+      if (data) {
+        try {
+          groups = JSON.parse(data);
+        } catch (e) {
+          groups = [];
+        }
+      } else {
+        groups = [];
+      }
+    }
+    function loadCompletedGroups() {
+      const data = localStorage.getItem(COMPLETED_KEY);
+      if (data) {
+        try {
+          return JSON.parse(data);
+        } catch (e) {
+          return [];
+        }
+      }
+      return [];
+    }
+
+    function renderGroups() {
+      const container = document.getElementById('todoGroups');
+      container.innerHTML = '';
+      groups.forEach((group, groupIdx) => {
+        const card = document.createElement('div');
+        card.className = 'todo-card';
+        card.setAttribute('draggable', 'true');
+        card.setAttribute('data-idx', groupIdx);
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragover', handleDragOver);
+        card.addEventListener('drop', handleDrop);
+        card.addEventListener('dragend', handleDragEnd);
+        card.innerHTML = `
+          <div class=\"todo-title\">${group.title}</div>
+          <div class=\"todo-deadline\">${group.deadline}</div>
+          ${group.subject ? `<div class=\"todo-subject\">科目：${group.subject}</div>` : ''}
+          ${group.weight ? `<div class=\"todo-weight\">比重：${group.weight}</div>` : ''}
+          ${group.notes ? `<div class=\"todo-notes\">メモ：${group.notes}</div>` : ''}
+          <div class=\"subtasks\" id=\"subtasks-${groupIdx}\"></div>
+          ${addSubtaskIdx === groupIdx ? `
+            <form class='add-subtask-form' onsubmit='submitSubtask(event,${groupIdx})'>
+              <input class='add-subtask-input' id='subtaskInput${groupIdx}' type='text' placeholder='サブタスク内容'>
+              <button class='add-subtask-btn' type='submit'>＋</button>
+              <button class='add-subtask-btn' type='button' onclick='cancelSubtaskForm()'>×</button>
+            </form>
+          ` : `<button class=\"add-subtask-btn\" onclick=\"showSubtaskForm(${groupIdx})\">＋</button>`}
+          <button class=\"complete-btn\" onclick=\"completeGroup(${groupIdx})\">完了</button>
+        `;
+        container.appendChild(card);
+        renderSubtasks(groupIdx);
+      });
+    }
+
+    function renderSubtasks(groupIdx) {
+      const subtasksDiv = document.getElementById(`subtasks-${groupIdx}`);
+      subtasksDiv.innerHTML = '';
+      groups[groupIdx].subtasks.forEach((sub, subIdx) => {
+        const row = document.createElement('div');
+        row.className = 'subtask-row';
+        row.innerHTML = `
+          <span class=\"subtask-num\">${subIdx + 1}</span>
+          <span class=\"subtask-label\">${sub.text}</span>
+          <input type=\"checkbox\" class=\"subtask-checkbox\" ${sub.done ? 'checked' : ''} onchange=\"toggleSubtask(${groupIdx},${subIdx})\">
+        `;
+        subtasksDiv.appendChild(row);
+      });
+    }
+
+    // ドラッグ＆ドロップ用変数
+    let dragSrcIdx = null;
+    function handleDragStart(e) {
+      dragSrcIdx = Number(this.getAttribute('data-idx'));
+      this.style.opacity = '0.5';
+    }
+    function handleDragOver(e) {
+      e.preventDefault();
+      this.style.border = '2px dashed #111';
+    }
+    function handleDrop(e) {
+      e.preventDefault();
+      const targetIdx = Number(this.getAttribute('data-idx'));
+      if (dragSrcIdx === null || dragSrcIdx === targetIdx) return;
+      // 配列の順番を入れ替え
+      const moved = groups.splice(dragSrcIdx, 1)[0];
+      groups.splice(targetIdx, 0, moved);
+      saveGroups();
+      renderGroups();
+    }
+    function handleDragEnd(e) {
+      this.style.opacity = '';
+      const cards = document.querySelectorAll('.todo-card');
+      cards.forEach(card => card.style.border = '2px solid #888');
+      dragSrcIdx = null;
+    }
+
+    // グループ追加モーダル
+    function openGroupModal() {
+      document.getElementById('groupModalBg').style.display = 'flex';
+      document.getElementById('groupTitle').value = '';
+      document.getElementById('groupDeadline').value = '';
+      document.getElementById('groupTitle').focus();
+    }
+    function closeGroupModal() {
+      document.getElementById('groupModalBg').style.display = 'none';
+    }
+    function addGroup() {
+      const title = document.getElementById('groupTitle').value.trim();
+      const subject = document.getElementById('groupSubject').value.trim();
+      const weight = document.getElementById('groupWeight').value;
+      const notes = document.getElementById('groupNotes').value.trim();
+      const deadlineValue = document.getElementById('groupDeadline').value;
+      let deadline = '';
+      if (deadlineValue) {
+        const d = new Date(deadlineValue);
+        deadline = `${d.getMonth() + 1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+      }
+      if (!title) {
+        alert('グループ名を入力してください');
+        return;
+      }
+      groups.push({ title, deadline, subject, weight, notes, subtasks: [] });
+      closeGroupModal();
+      saveGroups();
+      renderGroups();
+    }
+
+    // サブタスク追加フォーム
+    function showSubtaskForm(groupIdx) {
+      addSubtaskIdx = groupIdx;
+      renderGroups();
+      setTimeout(() => {
+        document.getElementById('subtaskInput'+groupIdx).focus();
+      }, 0);
+    }
+    function cancelSubtaskForm() {
+      addSubtaskIdx = null;
+      renderGroups();
+    }
+    function submitSubtask(e, groupIdx) {
+      e.preventDefault();
+      const input = document.getElementById('subtaskInput'+groupIdx);
+      const text = input.value.trim();
+      if (!text) return;
+      groups[groupIdx].subtasks.push({ text, done: false });
+      addSubtaskIdx = null;
+      saveGroups();
+      renderGroups();
+    }
+
+    function toggleSubtask(groupIdx, subIdx) {
+      groups[groupIdx].subtasks[subIdx].done = !groups[groupIdx].subtasks[subIdx].done;
+      saveGroups();
+      renderGroups();
+    }
+
+    function completeGroup(groupIdx) {
+      // 完了グループを保存
+      const completedGroups = loadCompletedGroups();
+      completedGroups.unshift(groups[groupIdx]);
+      saveCompletedGroups(completedGroups);
+      groups.splice(groupIdx, 1);
+      saveGroups();
+      renderGroups();
+      showCongrats();
+    }
+    function showCongrats() {
+      const div = document.createElement('div');
+      div.className = 'congrats';
+      div.textContent = 'おめでとう！';
+      document.body.appendChild(div);
+      setTimeout(() => {
+        div.remove();
+      }, 1200);
+    }
+
+    // ダークモード切替
+    const darkModeBtn = document.getElementById('darkModeToggle');
+    function setDarkMode(on) {
+      if(on){
+        document.body.classList.add('dark');
+        localStorage.setItem('todoDarkMode', '1');
+        darkModeBtn.textContent = 'ライトモード';
+      }else{
+        document.body.classList.remove('dark');
+        localStorage.setItem('todoDarkMode', '0');
+        darkModeBtn.textContent = 'ダークモード';
+      }
+    }
+    darkModeBtn.onclick = () => {
+      setDarkMode(!document.body.classList.contains('dark'));
+    };
+    // 初期状態
+    if(localStorage.getItem('todoDarkMode') === '1') setDarkMode(true);
+
+    // 完了済一覧モーダル表示
+    document.getElementById('showCompletedBtn').onclick = function() {
+      const completedGroups = loadCompletedGroups();
+      const listDiv = document.getElementById('completedList');
+      if (completedGroups.length === 0) {
+        listDiv.innerHTML = '<div style="text-align:center;color:#888;">完了済タスクはありません</div>';
+      } else {
+        listDiv.innerHTML = completedGroups.map(group => `
+          <div class="completed-card">
+            <div style="font-weight:bold;font-size:1.1rem;">${group.title}</div>
+            <div style="font-size:0.95rem;">${group.deadline ? '締切：' + group.deadline : ''}</div>
+            <div style="font-size:0.95rem;">${group.subject ? '科目：' + group.subject : ''}</div>
+            <div style="font-size:0.95rem;">${group.weight ? '比重：' + group.weight : ''}</div>
+            <div style="font-size:0.95rem;">${group.notes ? 'メモ：' + group.notes : ''}</div>
+            ${group.subtasks && group.subtasks.length > 0 ? `<div style='margin-top:6px;'><b>サブタスク：</b><ul style='margin:0 0 0 18px;padding:0;'>${group.subtasks.map(s=>`<li>${s.text}</li>`).join('')}</ul></div>` : ''}
+          </div>
+        `).join('');
+      }
+      document.getElementById('completedModalBg').style.display = 'flex';
+    };
+    function closeCompletedModal() {
+      document.getElementById('completedModalBg').style.display = 'none';
+    }
+
+    // ダークモード時の完了済モーダル
+    const observer = new MutationObserver(() => {
+      const modal = document.getElementById('completedModalBg');
+      if(document.body.classList.contains('dark')){
+        if(modal) modal.querySelector('.modal').style.background = '#232323';
+        if(modal) modal.querySelector('.modal').style.color = '#fff';
+      }else{
+        if(modal) modal.querySelector('.modal').style.background = '#fff';
+        if(modal) modal.querySelector('.modal').style.color = '#222';
+      }
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    // 初期化
+    loadGroups();
+    renderGroups();
+  </script>
+</body>
+</html>
